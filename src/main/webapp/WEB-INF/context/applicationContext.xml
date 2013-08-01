@@ -29,6 +29,8 @@
   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
   http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
+    <context:property-placeholder location="classpath:configuration.properties"/>
+
     <context:component-scan base-package="org.jasig.portlet.proxy.service"/>
     <context:annotation-config/>
 
@@ -137,7 +139,7 @@
     <bean id="stringEncryptionService" class="org.jasig.portlet.proxy.security.JasyptPBEStringEncryptionServiceImpl">
         <property name="stringEncryptor">
             <bean class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
-                 <property name="password" value="verylongsalt"/>
+                 <property name="password" value="${encryption.salt}"/>
             </bean>
         </property>
     </bean>

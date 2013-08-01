@@ -70,7 +70,8 @@ public class FormFieldImpl implements IFormField {
 	}
 
 	@Override
-	public void duplicate(IFormField copy) {
+	public IFormField duplicate() {
+        IFormField copy = new FormFieldImpl();
 		copy.setName(this.name);
 		copy.setSecured(this.getSecured());
 		
@@ -78,5 +79,6 @@ public class FormFieldImpl implements IFormField {
 		String[] copiedValues = new String[values.length];
 		System.arraycopy(values, 0, copiedValues, 0, values.length);
 		copy.setValues(copiedValues);
+        return copy;
 	}
 }

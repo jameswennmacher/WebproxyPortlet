@@ -39,61 +39,20 @@
             replay of those credentials on remote systems.  Each bean in the contentRequest list is for a 
             different system.  The parameters property lists the fields that will be added to a form and then
             submitted to the proxiedLocation in order to authenticate.  The formFieldImpl class contains three
-            fields: the field name and value, and whether the field is secured.  Secured is only relevant at this
+            fields: the field name, value, and whether the field is secured.  Secured is only relevant at this
             point for the portlet preferences interceptor, since those preferences must be stored in the database
-            and are presented to the user in an HTML password input field, instead of an HTML text input field. 
+            and are presented to the user in an HTML password input field instead of an HTML text input field.
+
+            The following bean shows two interceptors. Refer to those two classes for the format of values that
+            will be substituted.
+
+            userInfoUrlParameterizingPreInterceptor - will replace parameters with information from the portal's userInfo.
+
+            userPreferencesPreInterceptor - will replace parameters with information stored in portal preferences
+            for the current user.
+
          -->
-        <!-- 
-            <bean class="org.jasig.portlet.proxy.mvc.portlet.gateway.GatewayEntry" p:name="Zimbra"
-                p:iconUrl="/ResourceServingWebapp/rs/tango/0.8.90/32x32/apps/internet-mail.png">
-            <property name="contentRequests">
-                <util:map>
-                    <entry>
-                        <key>
-                            <bean class="org.jasig.portlet.proxy.service.web.HttpContentRequestImpl"
-                                p:proxiedLocation="https://zimbra.unicon.net/zimbra/"
-                                p:form="true" p:method="POST">
-                                <property name="parameters">
-                                    <util:map>
-                                        <entry>
-                                            <key><value>loginOp</value></key>
-                                            <bean class="org.jasig.portlet.proxy.service.web.FormFieldImpl">
-                                                <property name="name" value="loginOp"/>
-                                                <property name="value" value="login"/>
-                                            </bean>
-                                        </entry>
-                                        <entry>
-                                            <key><value>username</value></key>
-                                            <bean class="org.jasig.portlet.proxy.service.web.FormFieldImpl">
-                                                <property name="name" value="username"/>
-                                                <property name="value" value="{user.login.id}"/>
-                                            </bean>
-                                        </entry>
-                                        <entry>
-                                            <key><value>password</value></key>
-                                            <bean class="org.jasig.portlet.proxy.service.web.FormFieldImpl">
-                                                <property name="name" value="password"/>
-                                                <property name="value" value="{password}"/>
-                                            </bean>
-                                        </entry>
-                                    </util:map>
-                                </property>
-                            </bean>
-                        </key>
-                        <util:list>
-                            <value>userInfoUrlParameterizingPreInterceptor</value>
-                        </util:list>
-                    </entry>
-                </util:map>
-            </property>
-        </bean>
-        -->
         <!--
-        The following bean shows two interceptors.  userInfoUrlParameterizingPreInterceptor
-        will replace parameters with information from userInfo.  UserPreferencesPreInterceptor
-        will replace parameters with information stored in portal preferences for the current user.
-        Refer to those two classes for the format of values that will be substituted.
-         -->
         <bean class="org.jasig.portlet.proxy.mvc.portlet.gateway.GatewayEntry" p:name="MyZimbra"
               p:iconUrl="/ResourceServingWebapp/rs/tango/0.8.90/32x32/apps/internet-mail.png">
             <property name="contentRequests">
@@ -106,19 +65,24 @@
                                 <property name="parameters">
                                     <util:map>
                                         <entry>
-                                            <key><value>loginOp</value></key>
-                                            <bean class="org.jasig.portlet.proxy.service.web.FormFieldImpl"
-                                                    p:name="loginOp" p:value="login"/>
-                                        </entry>
-                                        <entry>
                                             <key><value>username</value></key>
                                             <bean class="org.jasig.portlet.proxy.service.web.FormFieldImpl"
-                                                    p:name="username" p:value="{prefs.myzimbra.uid}"/>
+                                                  p:name="username" p:value="{prefs.myzimbra.uid}"/>
                                         </entry>
                                         <entry>
                                             <key><value>password</value></key>
                                             <bean class="org.jasig.portlet.proxy.service.web.FormFieldImpl"
-                                                    p:name="password" p:value="{prefs.myzimbra.pwd}" p:secured="true"/>
+                                                  p:name="password" p:value="{prefs.myzimbra.pwd}" p:secured="true"/>
+                                        </entry>
+                                        <entry>
+                                            <key><value>loginOp</value></key>
+                                            <bean class="org.jasig.portlet.proxy.service.web.FormFieldImpl"
+                                                  p:name="loginOp" p:value="login"/>
+                                        </entry>
+                                        <entry>
+                                            <key><value>client</value></key>
+                                            <bean class="org.jasig.portlet.proxy.service.web.FormFieldImpl"
+                                                  p:name="client" p:value="preferred"/>
                                         </entry>
                                     </util:map>
                                 </property>
@@ -132,6 +96,7 @@
                 </util:map>
             </property>
         </bean>
+        -->
 
     </util:list>
     <bean class="org.springframework.web.portlet.mvc.annotation.DefaultAnnotationHandlerMapping">

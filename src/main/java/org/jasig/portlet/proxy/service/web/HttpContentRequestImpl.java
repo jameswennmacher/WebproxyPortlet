@@ -31,17 +31,19 @@ import javax.portlet.PortletSession;
 import org.jasig.portlet.proxy.service.GenericContentRequestImpl;
 import org.jasig.portlet.proxy.service.IFormField;
 import org.jasig.portlet.proxy.service.proxy.document.URLRewritingFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpContentRequestImpl extends GenericContentRequestImpl {
 
-    private Map<String, IFormField> parameters;
-    private Map<String, String> headers;
+    private static final Logger log = LoggerFactory.getLogger(HttpContentRequestImpl.class);
+
+    private Map<String, IFormField> parameters = new HashMap<String, IFormField>();
+    private Map<String, String> headers = new HashMap<String, String>();
     private String method;
     private boolean isForm;
-    
+
     public HttpContentRequestImpl() { 
-    	this.parameters = new HashMap<String, IFormField>();
-    	this.headers = new HashMap<String, String>();
     }
     
     public HttpContentRequestImpl(PortletRequest request) {
@@ -82,7 +84,7 @@ public class HttpContentRequestImpl extends GenericContentRequestImpl {
     }
 
     /**
-     * add a new parameter to the list of avaialble parameters.
+     * add a new parameter to the list of available parameters.
      * @param fieldName
      * @param value
      */
@@ -155,9 +157,7 @@ public class HttpContentRequestImpl extends GenericContentRequestImpl {
 		for (Entry<String, IFormField> requestEntry : this.getParameters().entrySet()){
 			String key = requestEntry.getKey();
 			IFormField values = requestEntry.getValue();
-			IFormField copiedValues = new FormFieldImpl();
-			values.duplicate(copiedValues);
-			copyParameters.put(key, copiedValues);
+			copyParameters.put(key, values.duplicate());
 		}
 		copy.setParameters(copyParameters);
 		return copy;

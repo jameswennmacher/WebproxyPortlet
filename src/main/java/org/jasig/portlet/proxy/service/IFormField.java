@@ -65,7 +65,6 @@ public interface IFormField {
 	
 	/**
 	 * duplicate() copies the data from the current IFormField into the passed-in parameter
-	 * @param copy a blank IFormField object that will receive a copy of the incoming data
 	 */
-	public void duplicate(IFormField copy);
+	public IFormField duplicate();
 }

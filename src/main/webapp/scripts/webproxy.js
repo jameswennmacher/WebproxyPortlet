@@ -23,10 +23,9 @@ var webproxyGatewayHandleRequest = function ($,contentRequests, index, formId) {
         if (contentRequest.form) {
             // In case a form is already on the page, remove it
             $("#"+formId).remove();
-            var action = contentRequest.parameters.proxiedLocation != null ? contentRequest.parameters.proxiedLocation.value : contentRequest.proxiedLocation;
             var form = $(document.createElement("form"))
                 .attr("id", formId)
-                .attr("action", action)
+                .attr("action", contentRequest.proxiedLocation)
                 .attr("method", contentRequest.method);
 
             $.each(contentRequest.parameters, function (key, formFields) {

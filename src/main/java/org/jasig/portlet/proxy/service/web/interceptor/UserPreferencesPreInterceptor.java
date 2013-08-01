@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.jasig.portlet.proxy.security.IStringEncryptionService;
 import org.jasig.portlet.proxy.service.IFormField;
 import org.jasig.portlet.proxy.service.web.HttpContentRequestImpl;
@@ -44,9 +45,7 @@ public class UserPreferencesPreInterceptor implements IPreInterceptor {
 				String parameterValue = parameterValues[i];
 				if (parameterValue.matches(preferencesRegex)) {
 					String preferredValue = prefs.getValue(parameterValue, parameterValue);
-					// if preferredValue is the same as the parameterValue, then preferredValue
-					// did not come from preferences and does not need to be decrypted
-					if (preferredValue != null && !preferredValue.equals("") && !preferredValue.equals(parameterValue) && stringEncryptionService != null && parameter.getSecured()) {
+					if (parameter.getSecured() && StringUtils.isNotBlank(preferredValue) && stringEncryptionService != null) {
 						logger.debug("decrypting preferredValue '" + preferredValue + "' for parameterKey: '" + parameterKey);
 						preferredValue = stringEncryptionService.decrypt(preferredValue);
 					}
@@ -71,19 +70,18 @@ public class UserPreferencesPreInterceptor implements IPreInterceptor {
 		boolean allPreferencesSet = true;
 		PortletPreferences prefs = portletRequest.getPreferences();
 
-		Map<String, IFormField> parameters = proxyRequest.getParameters();
-		for (String parameterKey: parameters.keySet()) {
-			IFormField parameter = parameters.get(parameterKey);
+		for (Map.Entry<String, IFormField> entry : proxyRequest.getParameters().entrySet()) {
+			IFormField parameter = entry.getValue();
 			String[] parameterValues = parameter.getValues();
-			for (int i = 0; i < parameterValues.length; i++) {
-				String parameterValue = parameterValues[i];
+			for (String parameterValue : parameterValues) {
 				if (parameterValue.matches(preferencesRegex)) {
 					
 					// look for the value for all portletPreferences fields
 					// if it doesn't find a preference for that field, value has not been set.
 					String preferredValue = prefs.getValue(parameterValue, null);
-					if (preferredValue == null || preferredValue.equals("")) {
+					if (StringUtils.isBlank(preferredValue)) {
 						allPreferencesSet = false;
+                        break;
 					}
 				}
 		    }

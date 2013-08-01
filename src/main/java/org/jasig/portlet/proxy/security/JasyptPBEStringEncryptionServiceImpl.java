@@ -53,6 +53,7 @@ public class JasyptPBEStringEncryptionServiceImpl implements IStringEncryptionSe
 	public String encrypt(final String plaintext) {
 		if (this.encryptor == null) {
 			logger.error("encryptor not set");
+            return null;
 		}
         try {
             return this.encryptor.encrypt(plaintext);
@@ -70,6 +71,7 @@ public class JasyptPBEStringEncryptionServiceImpl implements IStringEncryptionSe
 	public String decrypt(final String cryptotet) {
 		if (this.encryptor == null) {
 			logger.error("encryptor not set");
+            return null;
 		}
       try {
 	        return this.encryptor.decrypt(cryptotet);
@@ -89,6 +91,11 @@ public class JasyptPBEStringEncryptionServiceImpl implements IStringEncryptionSe
         final String dec = this.decrypt(enc);
         Assert.notNull(dec, "String decryption service is not properly configured.");
         Assert.isTrue(dec.equals(this.getClass().getName()), "String decryption failed to decode the encrypted text " + enc);
+
+        String result = this.decrypt("pD2vrJ0CiAbnW4k4lF84S8yXN6gSl6VUjISd8NN6AFnDGuei5rGyuw==");
+        if ("EncryptionKeyStillchangeMe".equals(result)) {
+            logger.error("Encryption key at default value.  Change it in configuration.properties for improved security!");
+        }
     }
 
 }

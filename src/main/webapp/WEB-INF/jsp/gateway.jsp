@@ -35,7 +35,8 @@
         </c:if>
         <c:if test="${validation == false}">      
             <a href="javascript:;" target="_self"></a>
-            <img src="${entry.iconUrl}" style="vertical-align: middle; text-decoration: none; padding-right: 10px;"/>${ entry.name } <spring:message code="portlet.preferences.missing"/>
+            <img src="${entry.iconUrl}" style="vertical-align: middle; text-decoration: none; padding-right: 10px;"/>${ entry.name }
+            <spring:message code="portlet.preferences.missing"/>
         </c:if>
         </p>
     </c:forEach>
@@ -76,7 +77,6 @@
     	            </c:choose>
 	            });
     		});
-    		
     	});
     });
 </script>

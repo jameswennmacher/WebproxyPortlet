@@ -18,8 +18,10 @@
  */
 package org.jasig.portlet.proxy.mvc.portlet.gateway;
 
+import org.apache.commons.lang.StringUtils;
 import org.jasig.portlet.proxy.mvc.IViewSelector;
-import org.jasig.portlet.proxy.service.web.ExternalLogic;
+import org.jasig.portlet.proxy.service.IFormField;
+import org.jasig.portlet.proxy.service.web.IAuthenticationFormModifier;
 import org.jasig.portlet.proxy.service.web.HttpContentRequestImpl;
 import org.jasig.portlet.proxy.service.web.interceptor.IPreInterceptor;
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("VIEW")
 public class GatewayPortletController {
+    private static final String HTTPS = "HTTPS";
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     
@@ -106,8 +109,8 @@ public class GatewayPortletController {
         for (Map.Entry<HttpContentRequestImpl, List<String>> requestEntry : entry.getContentRequests().entrySet()){
 
             // run each content request through any configured preinterceptors
-            // before adding it to the list.  Use a clone so that future changes to environment
-            // will accurately be intercepted.
+            // before adding it to the list.  Use a clone so that preinterceptors can change the
+            // values without impacting future executions (e.g. need to retain substitution tokens).
             final HttpContentRequestImpl contentRequest = requestEntry.getKey().duplicate();
             for (String interceptorKey : requestEntry.getValue()) {
                 final IPreInterceptor interceptor = applicationContext.getBean(interceptorKey, IPreInterceptor.class);
@@ -116,21 +119,41 @@ public class GatewayPortletController {
             contentRequests.add(contentRequest);
         }
 
-        // add custom logic to the ModelAndView
-        for (ExternalLogic externalLogic: (List<ExternalLogic>) entry.getExternalLogic()) {
-        	String fieldName = externalLogic.getFieldName();
-        	String result = externalLogic.getResult(portletRequest.getPreferences());
+        // add custom form field processing logic to the ModelAndView
+        for (IAuthenticationFormModifier authenticationFormModifier :
+                (List<IAuthenticationFormModifier>) entry.getAuthenticationFormModifier()) {
+        	String fieldName = authenticationFormModifier.getFieldName();
+        	String result = authenticationFormModifier.getResult(portletRequest.getPreferences());
         	for (HttpContentRequestImpl contentRequest : contentRequests) {
             	contentRequest.addParameter(fieldName, result);        		
         	}
         }
-        
+
+        // If the content parameters specify a proxiedLocation, override the contentRequest's proxiedLocation value.
+        // Also insure the proxiedLocation value is secure (HTTPS) if required.
+        for (HttpContentRequestImpl contentRequest : contentRequests) {
+            if (contentRequest.getParameters().get(IAuthenticationFormModifier.PROXY_LOCATION_OVERRIDE) != null) {
+                contentRequest.setProxiedLocation(contentRequest.getParameters().get(IAuthenticationFormModifier.PROXY_LOCATION_OVERRIDE).getValue());
+            }
+            if (entry.isRequireSecure() && StringUtils.isNotBlank(contentRequest.getProxiedLocation())
+                    && contentRequest.getProxiedLocation().length() >= HTTPS.length()) {
+                if (!HTTPS.equalsIgnoreCase(contentRequest.getProxiedLocation().substring(0, HTTPS.length()))) {
+                    logger.error("Proxied location '" + contentRequest.getProxiedLocation() + "' for gateway entry "
+                            + entry.getName() + " is not secure - discarding entry!!!");
+                    contentRequest.setParameters(new HashMap<String, IFormField>());
+                    contentRequest.setProxiedLocation("/HTTPSUrlRequiredButNotSpecified");   // Force a failure that's clear
+                }
+            }
+        }
+
         mv.addObject("contentRequests", contentRequests);
 
         // we don't want this response to be cached by the browser since it may
         // include one-time-only authentication tokens
-        portletResponse.getCacheControl().setExpirationTime(1);
-        portletResponse.getCacheControl().setUseCachedContent(false);
+        // See http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
+        portletResponse.setProperty("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+        portletResponse.setProperty("Pragma", "no-cache"); // HTTP 1.0.
+        portletResponse.setProperty("Expires", "0"); // Proxies.
 
         return mv;
     }
@@ -139,13 +162,8 @@ public class GatewayPortletController {
     public String showTargetInNewWindow(ResourceRequest portletRequest, ResourceResponse portletResponse, Model model,
                                               @RequestParam("index") int index) throws IOException {
         model.addAttribute("index", index);
-
-        // we don't want this response to be cached by the browser since it may
-        // include one-time-only authentication tokens
-        portletResponse.getCacheControl().setExpirationTime(1);
-        portletResponse.getCacheControl().setUseCachedContent(false);
-
         return "gatewayNewPage";
     }
+
 
 }

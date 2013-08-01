@@ -84,28 +84,24 @@ public class GatewayPortletEditController {
         
         // Look for any user-specified preference holders that are present in any of the gatewayEntry objects.
         // Store them in a list so that they can be edited.
-        Map<String,GatewayPreference> gatewayPreferences = new TreeMap<String,GatewayPreference>();
+        TreeMap<String,GatewayPreference> gatewayPreferences = new TreeMap<String,GatewayPreference>();
         for (GatewayEntry entry: entries) {
             for (Map.Entry<HttpContentRequestImpl, List<String>> requestEntry : entry.getContentRequests().entrySet()){
                 final HttpContentRequestImpl contentRequest = requestEntry.getKey();
                 Map<String, IFormField> parameters = contentRequest.getParameters();
                 for (String logicalFieldName : parameters.keySet()) {
                 	IFormField parameter = parameters.get(logicalFieldName);
-                    String[] parameterValues = parameter.getValues();
-                    for (int i = 0; i < parameterValues.length; i++) {
-                        String parameterValue = parameterValues[i];
+                    for (String parameterValue : parameter.getValues()) {
                         if (parameterValue.matches(preferencesRegex)) {
                             String preferenceName = parameterValue;
-                            
-                            // retrieve the preference and stuff the value here....
-                            String preferredValue = prefs.getValue(preferenceName, "");
-                            // if preferredValue is the same as the parameterValue, then preferredValue
-                            // did not come from preferences and does not need to be decrypted
-                            if (parameter.getSecured() && !"".equals(preferredValue) && stringEncryptionService != null) {
-                            	preferredValue = stringEncryptionService.decrypt(preferredValue);
-                            }
+
                             // If there are multiple entries with the same preference name, just use the first one
                             if (gatewayPreferences.get(preferenceName) == null) {
+                                // retrieve the preference and stuff the value here....
+                                String preferredValue = prefs.getValue(preferenceName, "");
+                                if (parameter.getSecured() && StringUtils.isNotBlank(preferredValue) && stringEncryptionService != null) {
+                                    preferredValue = stringEncryptionService.decrypt(preferredValue);
+                                }
                                 gatewayPreferences.put(preferenceName,
                                         new GatewayPreference(entry.getName(), logicalFieldName,
                                                 preferenceName, preferredValue, parameter.getSecured()));
@@ -115,9 +111,10 @@ public class GatewayPortletEditController {
                 }
             }
         }
-        
-        mv.addObject("gatewayPreferences", gatewayPreferences);
-        
+
+        // Use descendingMap so username is listed before password
+        mv.addObject("gatewayPreferences", gatewayPreferences.descendingMap());
+
         final String view = viewSelector.isMobile(request) ? mobileViewName : viewName;
         mv.setView(view);
         return mv;
@@ -132,9 +129,9 @@ public class GatewayPortletEditController {
             if (parameterName.matches(preferencesRegex)) {
                 String parameterValue = request.getParameter(parameterName);
                 IFormField parameter = getPortletPreferenceFormField(parameterName);
-                if (parameter.getSecured() && parameter != null && StringUtils.isNotBlank(parameterValue)) {
+                if (parameter != null && parameter.getSecured() && StringUtils.isNotBlank(parameterValue)) {
                     // If stringEncryptionService is not specified, throw an exception.  Do NOT allow storing
-                    // sensitive information in an unencrypted form.
+                    // sensitive information in an unencrypted format.
                     if (stringEncryptionService == null) {
                         throw new StringEncryptionException("String encryption service must be configured!");
                     }

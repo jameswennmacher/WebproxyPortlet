@@ -40,15 +40,15 @@
                 </tr>
             </thead>
             <tbody>
-                <c:forEach var="gatewayPreference" items="${preferredParameters }">
+                <c:forEach var="gatewayPreference" items="${gatewayPreferences }">
                         <tr>
-                            <td>${gatewayPreference.key }</td>
+                            <td>${gatewayPreference.value.system} ${gatewayPreference.value.logicalFieldName}</td>
                             <c:choose>
                                 <c:when test="${gatewayPreference.value.secured == true }">
-                                    <td><input type="password" name="${gatewayPreference.key}" value="${gatewayPreference.value.value }" /></td>
+                                    <td><input type="password" name="${gatewayPreference.value.preferenceName}" value="${gatewayPreference.value.fieldValue }" /></td>
                                 </c:when>
                                 <c:otherwise>
-                                    <td><input type="text" name="${gatewayPreference.key}" value="${gatewayPreference.value.value}" /></td>
+                                    <td><input type="text" name="${gatewayPreference.value.preferenceName}" value="${gatewayPreference.value.fieldValue}" /></td>
                                 </c:otherwise>
                             </c:choose>
                         </tr>
@@ -57,7 +57,9 @@
         </table>
         <spring:message var="savePreferencesLabel" code="edit.proxy.save.preferences"/>
         <input type="submit" value="${savePreferencesLabel }" class="portlet-form-button"/>
-        
+        <portlet:renderURL var="viewUrl"  portletMode="VIEW" />
+        <a href="${viewUrl}"><spring:message code="edit.proxy.cancel"/></a>
+
         </form>
     </div>
 </div>
